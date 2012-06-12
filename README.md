@@ -1,8 +1,13 @@
 **MENULEVEL**
 
-A fine Cocos2d example to create a level in Angry Birds style.
+A fine Cocos2d example to create a menu level in Angry Birds style.
 Requires only the inclusion of two files class and the images that you
 choose for your layers (already included in the example).
+
+Is really very simple to add to your game, with few lines of code, and one 
+objective-c class, you create a wonderful menu to choose the level of play.
+In this version there is a detailed example of how to use, but just use these 
+simple commands, listed below, to get full functionality :
 
 example:
 
@@ -13,6 +18,8 @@ example:
 	}
 
 	// on init
+	CGSize size = [[CCDirector sharedDirector] winSize];	
+	
 	MenuLevel *menu = [[MenuLevel alloc] init];
     menu.delegate = self;
     [self addChild:menu];
