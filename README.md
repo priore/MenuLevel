@@ -43,6 +43,6 @@ example:
 
 sample screen-shot :
 
-![Screenshot](https://github.com/priore/MenuLevel/blob/master/menulevel2.jpg)
+![Screenshot](https://github.com/priore/MenuLevel/raw/master/menulevel2.jpg)
 
 [Prioregroup.com Home Page](http://www.prioregroup.com)
