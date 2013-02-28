@@ -41,6 +41,22 @@
  }
  */
 
+// iOS 6 fix
+- (BOOL)shouldAutorotate {
+    
+    return YES;
+}
+
+// iOS 6 fix
+- (NSUInteger)supportedInterfaceOrientations {
+    
+#if __IPHONE_5_1 <= __IPHONE_OS_VERSION_MAX_ALLOWED
+    return UIInterfaceOrientationLandscapeLeft | UIInterfaceOrientationLandscapeRight;
+#else
+    return UIInterfaceOrientationMaskLandscape;
+#endif
+    
+}
 
 // Override to allow orientations other than the default portrait orientation.
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
