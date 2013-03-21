@@ -3,7 +3,7 @@
 //  MenuLevel
 //
 //  Created by Danilo Priore on 10/06/12.
-//  Copyright 2012 Prioregroup.com. All rights reserved.
+//  Copyright 2013 Prioregroup.com. All rights reserved.
 //
 
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,6 +27,20 @@
 //
 
 #import "MenuLevel.h"
+
+#pragma mark - MenuLevel private Interface
+
+@interface MenuLevel()
+
+- (void)setMenuItem:(MenuLevelItem*)item
+              Level:(NSInteger)level
+           position:(CGPoint)position
+               life:(NSInteger)life
+             locked:(BOOL)locked;
+
+@end
+
+#pragma mark MenuLevel Implementation
 
 @implementation MenuLevel
 
@@ -54,7 +68,7 @@
     return self;
 }
 
-- (CCMenuItem*)createMenuItemLevel:(NSInteger)level 
+- (MenuLevelItem*)createMenuItemLevel:(NSInteger)level
                           position:(CGPoint)position 
                               life:(NSInteger)life 
                             locked:(BOOL)locked
@@ -67,21 +81,70 @@
                             selector:@selector(buttonSelected:)];
 }
     
-- (CCMenuItem*)createMenuItemLevel:(NSInteger)level 
+- (MenuLevelItem*)createMenuItemLevel:(NSInteger)level 
                           position:(CGPoint)position 
                               life:(NSInteger)life 
                             locked:(BOOL)locked
                             target:(id)target
                           selector:(SEL)selector
 {
+    // create button with background
+    MenuLevelItem *item = [MenuLevelItem itemFromNormalSprite:[CCSprite spriteWithFile:backgroundFileName]
+                                               selectedSprite:nil target:target selector:selector];
+
+    // settings
+    [self setMenuItem:item Level:level position:position life:life locked:locked];
+    
+    return item;
+}
+
+#if NS_BLOCKS_AVAILABLE
+
+- (MenuLevelItem*)createMenuItemLevel:(NSInteger)level
+                          position:(CGPoint)position
+                              life:(NSInteger)life
+                            locked:(BOOL)locked
+                       didSelected:(MenuLevelDidSelectedItemBlock)didSelectedBlock {
+    
+    // create button with background
+    __block MenuLevelItem *item = [MenuLevelItem itemFromNormalSprite:[CCSprite spriteWithFile:backgroundFileName] selectedSprite:nil block:^(id sender) {
+        
+        if (didSelectedBlock != nil)
+            didSelectedBlock((MenuLevelItem*)item);
+    }];
+    
+    // settings
+    [self setMenuItem:item Level:level position:position life:life locked:locked];
+
+    return item;
+}
+
+#endif
+
+#pragma mark MenuLevel Button Delegate
+
+
+- (void)buttonSelected:(MenuLevelItem*)menuItem
+{
+    // call delegate when button is selected
+    if (delegate != nil && [delegate respondsToSelector:@selector(menuLevel:buttonSelected:)])
+        [delegate menuLevel:self buttonSelected:menuItem];
+}
+
+#pragma mark MenuLevel Private Methods
+
+- (void)setMenuItem:(MenuLevelItem*)item
+              Level:(NSInteger)level
+           position:(CGPoint)position
+               life:(NSInteger)life
+             locked:(BOOL)locked {
+
     // retrieve menu level scene
     CCScene *scene = (CCScene*)delegate;
     if (scene == nil)
         NSAssert(YES, @"Invalid delegate for MenuLevel!");
     
-    // create button with background
-    CCMenuItemSprite *item = [CCMenuItemSprite itemFromNormalSprite:[CCSprite spriteWithFile:backgroundFileName] 
-                                                      selectedSprite:nil target:target selector:selector];
+    // item position
     item.anchorPoint = ccp(0, 1);
     item.position = position;
     [self addChild:item];
@@ -90,40 +153,57 @@
     item.tag = level;
     
     // level text
-    CGPoint pos = ccp(item.position.x + item.boundingBox.size.width / 2 , 
+    CGPoint pos = ccp(item.position.x + item.boundingBox.size.width / 2 ,
                       item.position.y - item.boundingBox.size.height / 2);
-    CCLabelTTF *levelText = [CCLabelTTF labelWithString:[NSString stringWithFormat:@"%d", level]
-                                           fontName:fontName fontSize:fontSize];
-    levelText.position = pos;
-    levelText.color = fontColor;
-    levelText.visible = !locked;
-    [scene addChild:levelText];  
+    item.textLabel = [CCLabelTTF labelWithString:[NSString stringWithFormat:@"%d", level]
+                                        fontName:fontName fontSize:fontSize];
+    item.textLabel.position = pos;
+    item.textLabel.color = fontColor;
+    item.textLabel.visible = !locked;
+    [scene addChild:item.textLabel];
     
     // lock image
-    CCSprite *lock = [CCSprite spriteWithFile:lockFileName];
-    lock.position = pos;
-    lock.visible = locked;
-    [scene addChild:lock];
+    item.lockSprite = [CCSprite spriteWithFile:lockFileName];
+    item.lockSprite.position = pos;
+    item.lockSprite.visible = locked;
+    [scene addChild:item.lockSprite];
     
     // life's
+    NSMutableArray *stars = [[[NSMutableArray alloc] init] autorelease];
     for (int c = 0; c < maxLifes; c++) {
         
         // star
         CCSprite *star = [CCSprite spriteWithFile:c < life ? starFileName : starLowFileName];
         star.anchorPoint = ccp(0, 1);
-        star.position = ccp(item.position.x - 10 + (star.boundingBox.size.width * c) + (1 * c), 
+        star.position = ccp(item.position.x - 10 + (star.boundingBox.size.width * c) + (1 * c),
                             item.position.y - item.boundingBox.size.height - 2);
         [scene addChild:star];
+        [stars addObject:star];
     }
-    
-    return item;    
-}
-
-- (void)buttonSelected:(id)sender
-{
-    // call delegate when button is selected
-    if (delegate != nil && [delegate respondsToSelector:@selector(menuLevel:buttonSelected:)])
-        [delegate menuLevel:self buttonSelected:sender];
+    item.starSprites = stars;
 }
 
 @end
+
+#pragma mark - MenuLeveItem
+
+@implementation MenuLevelItem
+
+- (BOOL)isLocked {
+    return self.lockSprite.visible;
+}
+
+- (void)setIsLocked:(BOOL)locked {
+    self.lockSprite.visible = locked;
+}
+
+- (void)dealloc {
+    
+    [self.lockSprite release];
+    [self.textLabel release];
+    [self.starSprites release];
+    [super dealloc];
+}
+
+@end
+

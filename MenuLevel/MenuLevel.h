@@ -3,7 +3,7 @@
 //  MenuLevel
 //
 //  Created by Danilo Priore on 10/06/12.
-//  Copyright 2012 Prioregroup.com. All rights reserved.
+//  Copyright 2013 Prioregroup.com. All rights reserved.
 //
 
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,16 +24,25 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 //
+//  Mar 21, 2013 - Added MenuLevelItem for single sprite level.
+//               - Added Blocks Programming.
+//
 //
 
 #import <Foundation/Foundation.h>
 #import "cocos2d.h"
 
+@class MenuLevelItem;
+
+#if NS_BLOCKS_AVAILABLE
+    typedef void (^MenuLevelDidSelectedItemBlock)(MenuLevelItem *menuItem);
+#endif
+
 @protocol MenuLevelDelegate;
 
-@interface MenuLevel : CCMenu {
-    
-}
+#pragma mark - MenuLevel
+
+@interface MenuLevel : CCMenu
 
 @property (nonatomic, retain) NSString *lockFileName;
 @property (nonatomic, retain) NSString *backgroundFileName;
@@ -45,24 +54,46 @@
 @property (nonatomic, assign) NSInteger maxLifes;
 @property (nonatomic, assign) id<MenuLevelDelegate>delegate;
 
-- (CCMenuItem*)createMenuItemLevel:(NSInteger)level 
-                          position:(CGPoint)position 
-                              life:(NSInteger)life 
-                            locked:(BOOL)locked;
+- (MenuLevelItem*)createMenuItemLevel:(NSInteger)level
+                             position:(CGPoint)position
+                                 life:(NSInteger)life
+                               locked:(BOOL)locked;
 
-- (CCMenuItem*)createMenuItemLevel:(NSInteger)level 
-                          position:(CGPoint)position 
-                              life:(NSInteger)life 
-                            locked:(BOOL)locked
-                            target:(id)target
-                          selector:(SEL)selector;
+- (MenuLevelItem*)createMenuItemLevel:(NSInteger)level
+                             position:(CGPoint)position
+                                 life:(NSInteger)life
+                               locked:(BOOL)locked
+                               target:(id)target
+                             selector:(SEL)selector;
+
+#if NS_BLOCKS_AVAILABLE
+
+- (MenuLevelItem*)createMenuItemLevel:(NSInteger)level
+                             position:(CGPoint)position
+                                 life:(NSInteger)life
+                               locked:(BOOL)locked
+                          didSelected:(MenuLevelDidSelectedItemBlock)didSelectedBlock;
+#endif
 
 @end
+
+#pragma mark - MenuLevelItem
+
+@interface MenuLevelItem : CCMenuItemSprite
+
+@property (nonatomic, retain)   CCSprite    *lockSprite;
+@property (nonatomic, retain)   CCLabelTTF  *textLabel;
+@property (nonatomic, retain)   NSArray     *starSprites;
+@property (nonatomic, assign)   BOOL        isLocked;
+
+@end
+
+#pragma mark - Protocol
 
 @protocol MenuLevelDelegate <NSObject>
 
 @optional
 
-- (void)menuLevel:(MenuLevel*)menuLevel buttonSelected:(id)source;
+- (void)menuLevel:(MenuLevel*)menuLevel buttonSelected:(MenuLevelItem*)menuItem;
 
 @end
